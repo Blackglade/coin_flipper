@@ -1,0 +1,46 @@
+{
+  "name": "coin-flipper",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "rebuild": "npx beaker generate contracts/artifacts/application.json src/"
+  },
+  "dependencies": {
+    "@algoscan/use-wallet-ui": "^1.0.11",
+    "@blockshake/defly-connect": "^1.1.0",
+    "@emotion/react": "^11.10.4",
+    "@emotion/styled": "^11.10.4",
+    "@json-rpc-tools/utils": "^1.7.6",
+    "@mui/icons-material": "^5.10.6",
+    "@mui/lab": "^5.0.0-alpha.102",
+    "@mui/material": "^5.10.8",
+    "@perawallet/connect": "^1.1.1",
+    "@randlabs/myalgo-connect": "^1.4.2",
+    "@tanstack/react-query": "^4.24.9",
+    "@txnlab/use-wallet": "^1.2.1",
+    "@walletconnect/client": "^1.8.0",
+    "algorand-walletconnect-qrcode-modal": "^1.8.0",
+    "algosdk": "^2.1.0",
+    "assert": "^2.0.0",
+    "beaker-ts": "^0.0.81",
+    "global": "^4.4.0",
+    "process": "^0.11.10",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "url": "^0.11.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.17",
+    "@types/react-dom": "^18.0.6",
+    "@vitejs/plugin-react": "^2.1.0",
+    "npx": "^10.2.2",
+    "tslib": "^2.4.0",
+    "tsx": "^3.9.0",
+    "typescript": "^4.6.4",
+    "vite": "^3.1.0"
+  }
+}

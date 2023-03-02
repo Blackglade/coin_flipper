@@ -1,0 +1,64 @@
+.coin {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 5rem;
+  margin: 0 0.25rem;
+  height: 3.5rem;
+  border-bottom: 0.05em solid white;
+  border-right: 0.05em solid white;
+  border-radius: 50%;
+  transition: all 0.25s ease-out;
+  cursor: pointer;
+  background-image: var(--coin-img);
+  background-position: 2px;
+  background-size: 100%;
+  box-shadow: 0 0.25rem 0 #816213, 0 0.3rem 0 #816213, 0 0.35rem 0 #816213, 0 0.4rem 0 #816213, 0 0.45rem 0 #816213, 0 0.5rem 0 #816213, 0 0.55em 0.2rem rgba(0, 0, 0, 0.5);
+}
+.coin.flippy {
+  animation: flip 1.5s linear;
+  animation-fill-mode: forwards;
+}
+.coin.reverse-flippy {
+  animation: reverse-flip 1.5s linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes flip {
+  0% {
+    transform: translateY(0) rotate(0);
+  }
+  25% {
+    transform: translateY(-3rem) rotate(180deg);
+  }
+  50% {
+    height: 0.1rem;
+    border: 0.025;
+    transform: translateY(-5rem) rotate(360deg);
+  }
+  75% {
+    transform: translateY(-4rem) rotate(540deg);
+  }
+  100% {
+    transform: translateY(0) rotate(720deg);
+  }
+}
+  
+@keyframes reverse-flip {
+  0% {
+    transform: translateY(0) rotate(0);
+  }
+  25% {
+    transform: translateY(-3rem) rotate(-180deg);
+  }
+  50% {
+    height: 0.1rem;
+    border: 0.025;
+    transform: translateY(-5rem) rotate(-360deg);
+  }
+  75% {
+    transform: translateY(-4rem) rotate(-540deg);
+  }
+  100% {
+    transform: translateY(0) rotate(-720deg);
+  }
+}
