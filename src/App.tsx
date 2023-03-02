@@ -45,9 +45,9 @@ export default function App() {
 
   // App State
   const [app, setApp] = useState({
-		stage: 1,
+		stage: 0,
 		data: {
-      optInTx: 'EQHK67DLAHKLYA7GNSF2U5IYTQB463WHEQOF4BVHDRDROU2VP76A',
+      optInTx: null,
       optOutTx: null
     }
 	})
