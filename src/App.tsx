@@ -2,13 +2,15 @@ import algosdk from "algosdk";
 import { useState, useEffect } from "react";
 import { Network, APIProvider, getAlgodClient } from "beaker-ts/lib/clients";
 import { CoinFlipper } from '../contracts/coinflipper_client'
-import { Avatar, Card, Box, Divider, Typography, CardContent } from "@mui/material";
+import { Avatar, Card, Box, Divider, Typography, CardContent, CardActions } from "@mui/material";
 import FlipCameraAndroidIcon from '@mui/icons-material/FlipCameraAndroid';
 import { LoadingButton } from "@mui/lab";
 import { useWalletUI, WalletUI } from '@algoscan/use-wallet-ui'
 
 import OptIn from '../stages/0_opt_in'
 import FlipBet from '../stages/1_flip_bet'
+import SettleBet from '../stages/2_settle_bet'
+import { useQuery } from "@tanstack/react-query";
 
 // App ID of DApp Deployed to Testnet
 const APPID = 115885218
@@ -44,15 +46,25 @@ export default function App() {
   const [appClient, setAppClient] = useState<CoinFlipper>(AnonClient)
 
   // App State
-  const [app, setApp] = useState({
-		stage: 0,
+  const [app, setApp] = useState<{ 
+    stage: number, 
+    data: { 
+      status: boolean | null
+      optInTx: string | null
+      optOutTx: string | null
+      betTx: string | null
+      betRound: number | null
+    } 
+  }>({
+		stage: -1,
 		data: {
+      status: null,
       optInTx: null,
-      optOutTx: null
+      optOutTx: null,
+      betTx: null,
+      betRound: null
     }
 	})
-
-
 
   // Update App Client when activeAddress updates
   useEffect(() => {
@@ -65,10 +77,31 @@ export default function App() {
       }))
     }
   }, [activeAddress])
+  
+  useQuery(['-1', 'opt_status', activeAddress], async () => {
+    
+    if(typeof activeAddress === 'undefined') return;
+    try {
+      const result = await algodClient.accountApplicationInformation(activeAddress, APPID).do()
+      return('app-local-state' in result)
+    } catch(e) {
+      return false
+    }
+  }, {
+    enabled: app.data.status === null && typeof activeAddress !== 'undefined',
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    onSuccess: (optedIn) => setApp(prev => ({ stage: optedIn ? 1 : 0, data: { ...prev.data, status: !!optedIn }}))
+  })
 
-  console.log('signer: ', signer)
-  console.log('appClient: ', appClient)
-  console.log('addy: ', activeAddress)
+  const { refetch, isFetching } = useQuery(['-2', 'opt_out'], async () => {
+    const result = await appClient.closeOut()
+    return result
+  }, {
+    onSuccess: (data) => setApp(prev => ({ stage: 0, data: { ...prev.data, optOutTx: data.txIDs[0], status: false }}))
+  })
+
+  console.log(app)
 
   return (
     <div className="App">
@@ -81,40 +114,31 @@ export default function App() {
       <Box display="flex" flexDirection="column" gap={2} mt={2} position="relative" alignItems="center">
         <Typography variant="h3" fontWeight={700} textAlign="center" mb={2}>Coin Flipper Demo</Typography>
         {typeof activeAddress === 'undefined' ? <Typography variant="h4" fontWeight={500} textAlign="center" mt={2}>Connect Wallet</Typography> : <>
-          <Box display='flex' gap={4}>
-            <Card elevation={4} sx={{padding: 2, borderRadius: '0.5rem', maxWidth: '300px'}}>
-              <Box display="flex" alignItems="center" gap={1} mb={1}>
-                  <Avatar variant="rounded" sx={{width: '2rem', height: '2rem', bgcolor: "#1976d2"}}><FlipCameraAndroidIcon /></Avatar>
-                  <Typography variant="h5">App Transactions</Typography>
-              </Box>
-              <Divider />
-              <CardContent>
-                <Typography noWrap>Opt In: {app.data.optInTx ? <a className="link" href={'https://testnet.algoscan.app/tx/' + app.data.optInTx} target='_blank' rel="noreferrer">{app.data.optInTx}</a> : <span style={{color: '#d32f2f'}}>Not Found</span> }</Typography>
-                <Typography noWrap>Opt Out: {app.data.optOutTx ? <a className="link" href={'https://testnet.algoscan.app/tx/' + app.data.optOutTx} target='_blank' rel="noreferrer">{app.data.optOutTx}</a> : <span style={{color: '#d32f2f'}}>Not Found</span> }</Typography>
-              </CardContent>
-            </Card>
-
+          <Box display='flex' gap={2}>
             <Box display='flex' flexDirection='column' gap={2}>
+              <Card elevation={4} sx={{padding: 2, borderRadius: '0.5rem', maxWidth: '300px'}}>
+                <Box display="flex" alignItems="center" gap={1} mb={1}>
+                    <Avatar variant="rounded" sx={{width: '2rem', height: '2rem', bgcolor: "#1976d2"}}><FlipCameraAndroidIcon /></Avatar>
+                    <Typography variant="h5">App Transactions</Typography>
+                </Box>
+                <Divider />
+                <CardContent>
+                  <Typography noWrap>Status: <span style={{color: !!app.data.status ? '#2e7d32' : '#d32f2f'}}>{app.data.status === null ? 'Checking Status...' : app.data.status ? 'Opted In' : 'Opted Out'}</span></Typography>
+                  <Typography noWrap>Opt In: {app.data.optInTx ? <a className="link" href={'https://testnet.algoscan.app/tx/' + app.data.optInTx} target='_blank' rel="noreferrer">{app.data.optInTx}</a> : <span style={{color: '#d32f2f'}}>Not Found</span> }</Typography>
+                  <Typography noWrap>Opt Out: {app.data.optOutTx ? <a className="link" href={'https://testnet.algoscan.app/tx/' + app.data.optOutTx} target='_blank' rel="noreferrer">{app.data.optOutTx}</a> : <span style={{color: '#d32f2f'}}>Not Found</span> }</Typography>
+                  <Typography noWrap>Bet Tx: {app.data.betTx ? <a className="link" href={'https://testnet.algoscan.app/tx/' + app.data.betTx} target='_blank' rel="noreferrer">{app.data.betTx}</a> : <span style={{color: '#d32f2f'}}>Not Found</span> }</Typography>
+                  <Typography noWrap>Bet Round: {app.data.betRound ? <a className="link" href={'https://testnet.algoscan.app/block/' + app.data.betRound} target='_blank' rel="noreferrer">{app.data.betRound}</a> : <span style={{color: '#d32f2f'}}>Not Found</span> }</Typography>
+                </CardContent>
+                <CardActions>
+                  <LoadingButton variant="contained" color="error" disabled={app.data.status === null || !app.data.status} loading={isFetching} onClick={() => refetch()}>Opt Out</LoadingButton>
+                </CardActions>
+              </Card>
               <OptIn app={app} setApp={setApp} client={appClient} />
-              <FlipBet app={app} setApp={setApp} client={appClient} />
             </Box>
-          </Box>      
+            <FlipBet app={app} setApp={setApp} client={appClient} />
+          </Box>
+          <SettleBet app={app} setApp={setApp} client={appClient} />      
         </>}
-        {/* <Tabs value={tab} onChange={(e, newVal) => setTab(newVal)}>
-          <Tab label='Admin Setup' />
-          <Tab label='AMM Functions' />
-        </Tabs>
-        <TabPanel value={tab} index={0} flexDirection="row">
-          <CreateAssets app={app} setApp={setApp} appClient={appClient} />
-          <InitAMM app={app} setApp={setApp} appClient={appClient} />
-          <OptIn app={app} setApp={setApp} appClient={appClient} />
-          <AddLiquidity app={app} setApp={setApp} appClient={appClient} />
-        </TabPanel>
-        <TabPanel value={tab} index={1} flexDirection="row">
-
-          <Swap app={app} setApp={setApp} appClient={appClient} />
-            <Burn app={app} setApp={setApp} appClient={appClient} />
-        </TabPanel> */}
       </Box>
     </div>
   );

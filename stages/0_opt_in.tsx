@@ -10,9 +10,7 @@ export default function OptIn({app, setApp, client} : {app: any, setApp: any, cl
 		const optin = await client.optIn()
 		return { txid: optin.txIDs[0] }
 	}, {
-		onSuccess: ({txid}) => {
-			setApp({ stage: 1, data: { ...app.data, optInTx: txid }})
-		}
+		onSuccess: ({txid}) => setApp({ stage: 1, data: { ...app.data, optInTx: txid, status: true }})
 	})
 
 

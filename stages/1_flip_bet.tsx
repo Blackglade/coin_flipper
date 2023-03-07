@@ -15,16 +15,6 @@ export default function FlipBet({app, setApp, client} : {app: any, setApp: any, 
 	const { isFetching, isError, refetch } = useQuery(['1', 'flip_bet', amount, head], async () => {
 
 		const sp = await client.client.getTransactionParams().do()
-
-		const x = makePaymentTxnWithSuggestedParamsFromObject({
-			from: client.sender,
-			suggestedParams: sp,
-			to: client.appAddress,
-			amount: amount * 1_000,
-		});
-
-		console.log('Instance of ', x instanceof algosdk.Transaction)
-
 		const result = await client.flip_coin({
 			bet_payment: makePaymentTxnWithSuggestedParamsFromObject({
 				from: client.sender,
@@ -35,13 +25,9 @@ export default function FlipBet({app, setApp, client} : {app: any, setApp: any, 
 			heads: head,
 		});
 
-		console.log(result)
-
-		return { true: 1 }
+		return result
 	}, {
-		onSuccess: () => {
-			setApp({ stage: 2, data: { ...app.data,  }})
-		}
+		onSuccess: (result) => setApp({ stage: 2, data: { ...app.data, betTx: result.txID, betRound: Number(result.returnValue) }})
 	})
 
 	return(
